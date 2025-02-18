@@ -16,6 +16,7 @@ export default function RetirementCalculator() {
     const [annualExpenses, setAnnualExpenses] = useState<number>(50000)
     const [annualRate, setAnnualRate] = useState<number>(0.01)
     const [surplusAssets, setSurplusAssets] = useState<number>(0)
+    const [assets, setAssets] = useState<number>(0)
     const [total, setTotal] = useState<number>(0)
     const [annualSavingsNeeded, setAnnualSavingsNeeded] = useState<number | null>(null)
     const [yearlyBalances, setYearlyBalances] = useState<YearlyBalance[]>([])
@@ -26,12 +27,12 @@ export default function RetirementCalculator() {
 
         // Calculate the total amount needed at retirement
         const totalNeeded =
-            annualExpenses * ((1 - Math.pow(1 + annualRate, -yearsInRetirement)) / annualRate) + surplusAssets / (1 + annualRate)
+            annualExpenses * ((1 + annualRate - Math.pow(1 + annualRate, -yearsInRetirement + 1)) / annualRate) + surplusAssets * (Math.pow(1 + annualRate, -yearsInRetirement))
         setTotal(totalNeeded)
 
         // Calculate the annual savings needed
         const savingsNeeded =
-            totalNeeded / ((Math.pow(1 + annualRate, yearsUntilRetirement) - 1) / annualRate)
+            (totalNeeded - (assets * Math.pow(1 + annualRate, yearsUntilRetirement))) / ((Math.pow(1 + annualRate, yearsUntilRetirement) - 1) / annualRate)
 
         setAnnualSavingsNeeded(savingsNeeded)
 
@@ -53,7 +54,7 @@ export default function RetirementCalculator() {
     }
 
     return (
-        <div className="flex min-h-screen items-center justify-center bg-gray-100 p-4">
+        <div className="flex min-h-screen items-center justify-center bg-gray-100 p-4 flex-col">
             <div className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="space-y-2">
@@ -83,6 +84,8 @@ export default function RetirementCalculator() {
                             onChange={(e) => setOfficialRetirementAge(Number(e.target.value))}
                         />
                     </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                         <div>Annual Expenses (￥)</div>
                         <Input
@@ -93,7 +96,7 @@ export default function RetirementCalculator() {
                         />
                     </div>
                     <div className="space-y-2">
-                        <div>Annual Rate</div>
+                        <div>Annual Rate (%)</div>
                         <Input
                             id="annualRate"
                             type="number"
@@ -110,23 +113,33 @@ export default function RetirementCalculator() {
                             onChange={(e) => setSurplusAssets(Number(e.target.value))}
                         />
                     </div>
+                    <div className="space-y-2">
+                        <div>Assets Now (￥)</div>
+                        <Input
+                            id="surplusAssets"
+                            type="number"
+                            value={assets}
+                            onChange={(e) => setAssets(Number(e.target.value))}
+                        />
+                    </div>
                 </div>
                 <div className="text-sm text-gray-500">Just Calculate</div>
-                <Button onClick={calculateSavings} className="w-full">
+                <Button onClick={calculateSavings} className="w-full" type="primary" shape="round" size="large">
                     Calculate
                 </Button>
-                {annualSavingsNeeded !== null && (
-                    <div className="mt-4 p-4 bg-green-100 rounded-md">
-                        <p className="text-lg font-semibold">You need to save approximately:</p>
-                        <p className="text-2xl font-bold text-green-700">￥{annualSavingsNeeded.toFixed(2)} per year</p>
-                    </div>
-                )}
-                {total > 0 && (
-                    <div className="mt-4 p-4 bg-green-100 rounded-md">
-                        <p className="text-lg font-semibold">Total need:</p>
-                        <p className="text-2xl font-bold text-green-700">￥{total.toFixed(2)}</p>
-                    </div>
-                )}
+                <div className="mt-8">
+                    {annualSavingsNeeded !== null && (
+                        <div className="p-8 bg-blue-100 rounded-md w-full">
+                            <p className="text-lg font-semibold">You need to save approximately:</p>
+                            <p className="text-2xl font-bold text-blue-700">￥{annualSavingsNeeded.toFixed(2)} per year</p>
+                        </div>
+                    )}
+                    {total > 0 && (
+                        <div className="mt-8 p-8 bg-blue-100 rounded-md w-full">
+                            <p className="text-lg font-semibold">All you need when perfect retirement age:</p>
+                            <p className="text-2xl font-bold text-blue-700">￥{total.toFixed(2)}</p>
+                        </div>
+                    )}</div>
                 {/* {yearlyBalances.length > 0 && (
                             <div className="mt-8">
                                 <h3 className="text-lg font-semibold mb-2">Yearly Savings Balance</h3>
@@ -151,6 +164,7 @@ export default function RetirementCalculator() {
                             </div>
                         )} */}
             </div>
+
         </div>
     )
 }
